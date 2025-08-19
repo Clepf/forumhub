@@ -45,4 +45,31 @@ public class CursoService {
                 .orElseThrow(() -> new NoSuchElementException("Curso não encontrado"));
         return new CursoResponse(c.getId(), c.getNome(), c.getCategoria());
     }
+
+    @Transactional
+    public CursoResponse atualizar(Long id, CursoRequest req) {
+        Curso existente = cursoRepo.findById(id)
+                .orElseThrow(() -> new NoSuchElementException("Curso não encontrado"));
+
+        // Verificar se já existe outro curso com o mesmo nome
+        cursoRepo.findByNome(req.getNome())
+                .filter(c -> !c.getId().equals(id))
+                .ifPresent(c -> {
+                    throw new IllegalArgumentException("Já existe outro curso com esse nome");
+                });
+
+        existente.setNome(req.getNome());
+        existente.setCategoria(req.getCategoria());
+
+        Curso atualizado = cursoRepo.save(existente);
+        return new CursoResponse(atualizado.getId(), atualizado.getNome(), atualizado.getCategoria());
+    }
+
+    @Transactional
+    public void deletar(Long id) {
+        if (!cursoRepo.existsById(id)) {
+            throw new NoSuchElementException("Curso não encontrado");
+        }
+        cursoRepo.deleteById(id);
+    }
 }

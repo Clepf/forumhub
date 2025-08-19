@@ -58,6 +58,18 @@ public class TopicoService {
     }
 
     @Transactional(readOnly = true)
+    public Page<TopicoResponse> listarPorCurso(String cursoNome, Pageable pageable) {
+        return topicoRepo.findAllByCursoNome(cursoNome, pageable)
+                .map(this::mapToResponse);
+    }
+
+    @Transactional(readOnly = true)
+    public Page<TopicoResponse> listarPorStatus(String status, Pageable pageable) {
+        return topicoRepo.findAllByStatus(status, pageable)
+                .map(this::mapToResponse);
+    }
+
+    @Transactional(readOnly = true)
     public TopicoResponse buscarPorId(Long id) {
         Topico t = topicoRepo.findById(id)
                 .orElseThrow(() -> new NoSuchElementException("Tópico não encontrado"));
@@ -92,7 +104,6 @@ public class TopicoService {
     }
 
     private void validarDados(TopicoRequest req) {
-        // Exemplo de validação de negócio: não aceitar tópicos duplicados
         List<Topico> duplicados = topicoRepo
                 .findByTituloContainingIgnoreCase(req.getTitulo(), Pageable.unpaged())
                 .stream()

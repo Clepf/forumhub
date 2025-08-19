@@ -6,8 +6,10 @@ import com.forumhub.api.service.TopicoService;
 import jakarta.validation.Valid;
 import org.springframework.data.domain.Page;
 import org.springframework.data.domain.Pageable;
-import org.springframework.http.*;
+import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.*;
+
+import java.net.URI;
 
 @RestController
 @RequestMapping("/topicos")
@@ -19,16 +21,14 @@ public class TopicoController {
         this.service = service;
     }
 
-    // Criar um novo tópico
     @PostMapping
     public ResponseEntity<TopicoResponse> criar(@Valid @RequestBody TopicoRequest req) {
         TopicoResponse resp = service.criar(req);
         return ResponseEntity
-                .created(URI.create("/topicos/" + resp.getId()))
+                .created(URI.create("/topicos/" + resp.getId()))  // <— URI agora reconhecido
                 .body(resp);
     }
 
-    // Listar tópicos com paginação e filtros opcionais
     @GetMapping
     public ResponseEntity<Page<TopicoResponse>> listar(Pageable pageable,
                                                        @RequestParam(required = false) String curso,
@@ -44,23 +44,18 @@ public class TopicoController {
         return ResponseEntity.ok(page);
     }
 
-    // Detalhar um tópico por ID
     @GetMapping("/{id}")
     public ResponseEntity<TopicoResponse> buscarPorId(@PathVariable Long id) {
-        TopicoResponse resp = service.buscarPorId(id);
-        return ResponseEntity.ok(resp);
+        return ResponseEntity.ok(service.buscarPorId(id));
     }
 
-    // Atualizar um tópico existente
     @PutMapping("/{id}")
     public ResponseEntity<TopicoResponse> atualizar(
             @PathVariable Long id,
             @Valid @RequestBody TopicoRequest req) {
-        TopicoResponse resp = service.atualizar(id, req);
-        return ResponseEntity.ok(resp);
+        return ResponseEntity.ok(service.atualizar(id, req));
     }
 
-    // Excluir um tópico
     @DeleteMapping("/{id}")
     public ResponseEntity<Void> deletar(@PathVariable Long id) {
         service.deletar(id);

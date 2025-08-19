@@ -2,25 +2,27 @@ package com.forumhub.api.config;
 
 import com.forumhub.api.security.JwtAuthenticationFilter;
 import com.forumhub.api.service.AuthService;
-import org.springframework.context.annotation.*;
-import org.springframework.security.authentication.*;
-import org.springframework.security.config.annotation.authentication.builders.AuthenticationManagerBuilder;
+import org.springframework.context.annotation.Bean;
+import org.springframework.context.annotation.Configuration;
+import org.springframework.security.authentication.AuthenticationManager;
+import org.springframework.security.config.Customizer;
+import org.springframework.security.config.annotation.authentication.configuration.AuthenticationConfiguration;
+import org.springframework.security.config.annotation.method.configuration.EnableMethodSecurity;
 import org.springframework.security.config.annotation.web.builders.HttpSecurity;
-import org.springframework.security.config.http.*;
+import org.springframework.security.config.http.SessionCreationPolicy;
 import org.springframework.security.crypto.bcrypt.BCryptPasswordEncoder;
 import org.springframework.security.crypto.password.PasswordEncoder;
-import org.springframework.security.web.*;
+import org.springframework.security.web.SecurityFilterChain;
 import org.springframework.security.web.authentication.UsernamePasswordAuthenticationFilter;
 
 @Configuration
-@EnableWebSecurity
-public class SecurityConfig extends WebSecurityConfigurerAdapter {
+@EnableMethodSecurity
+public class SecurityConfig {
 
     private final AuthService authService;
     private final JwtAuthenticationFilter jwtFilter;
 
-    public SecurityConfig(AuthService authService,
-                          JwtAuthenticationFilter jwtFilter) {
+    public SecurityConfig(AuthService authService, JwtAuthenticationFilter jwtFilter) {
         this.authService = authService;
         this.jwtFilter = jwtFilter;
     }
@@ -30,28 +32,33 @@ public class SecurityConfig extends WebSecurityConfigurerAdapter {
         return new BCryptPasswordEncoder();
     }
 
-    @Override
-    protected void configure(AuthenticationManagerBuilder auth) throws Exception {
-        auth.userDetailsService(authService)
-                .passwordEncoder(passwordEncoder());
+    // Expõe AuthenticationManager para ser usado no AuthController
+    @Bean
+    public AuthenticationManager authenticationManager(AuthenticationConfiguration config) throws Exception {
+        return config.getAuthenticationManager();
     }
 
-    @Override @Bean
-    public AuthenticationManager authenticationManagerBean() throws Exception {
-        return super.authenticationManagerBean();
-    }
+    // Define as regras de segurança e inclui o filtro JWT
+    @Bean
+    public SecurityFilterChain filterChain(HttpSecurity http) throws Exception {
+        http
+                .csrf(csrf -> csrf.disable())
+                .sessionManagement(sm -> sm.sessionCreationPolicy(SessionCreationPolicy.STATELESS))
+                .authorizeHttpRequests(auth -> auth
+                        // libera login e criação de usuário sem token
+                        .requestMatchers("/login", "/usuarios").permitAll()
+                        // exige autenticação para todos os endpoints /topicos/**
+                        .requestMatchers("/topicos/**").authenticated()
+                        // demais rotas também exigem token
+                        .anyRequest().authenticated()
+                )
+                // registra o seu UserDetailsService
+                .userDetailsService(authService)
+                // adiciona o filtro JWT antes do filtro padrão de username/password
+                .addFilterBefore(jwtFilter, UsernamePasswordAuthenticationFilter.class)
+                // fallback HTTP Basic (opcional)
+                .httpBasic(Customizer.withDefaults());
 
-    @Override
-    protected void configure(HttpSecurity http) throws Exception {
-        http.csrf().disable()
-                .sessionManagement()
-                .sessionCreationPolicy(SessionCreationPolicy.STATELESS)
-                .and()
-                .authorizeRequests()
-                .antMatchers("/login").permitAll()
-                .antMatchers(HttpMethod.GET, "/topicos/**").authenticated()
-                .anyRequest().authenticated()
-                .and()
-                .addFilterBefore(jwtFilter, UsernamePasswordAuthenticationFilter.class);
+        return http.build();
     }
 }

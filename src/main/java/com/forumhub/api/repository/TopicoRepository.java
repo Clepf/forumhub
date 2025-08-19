@@ -13,7 +13,7 @@ public interface TopicoRepository extends JpaRepository<Topico, Long> {
     Page<Topico> findAllByCursoNome(String cursoNome, Pageable pageable);
 
     // Busca tópicos por status
-    List<Topico> findByStatus(String status);
+    Page<Topico> findAllByStatus(String status, Pageable pageable);
 
     // Busca tópicos cujo título contém certa palavra
     Page<Topico> findByTituloContainingIgnoreCase(String titulo, Pageable pageable);
