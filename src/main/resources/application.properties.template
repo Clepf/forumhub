@@ -20,3 +20,7 @@ server.port=8080
 
 # Configuracao para desenvolvimento
 spring.devtools.restart.enabled=true
+
+# JWT
+jwt.secret=P*Fosb!twT8@NBq#Oh!5xEwtkaT6@4bO
+jwt.expiration=3600000  # 1 hora em milissegundos
