@@ -1,5 +1,3 @@
--- V2__Insert_initial_data.sql
-
 INSERT INTO curso (nome, categoria) VALUES
   ('Spring Boot', 'BACKEND'),
   ('Java Básico', 'BACKEND'),

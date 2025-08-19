@@ -1,5 +1,3 @@
--- V1__Create_tables.sql
-
 -- Criação da tabela Usuario
 CREATE TABLE usuario (
   id BIGINT AUTO_INCREMENT PRIMARY KEY,

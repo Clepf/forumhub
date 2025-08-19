@@ -12,6 +12,8 @@ import org.springframework.data.domain.Page;
 import org.springframework.data.domain.Pageable;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
+import org.springframework.web.server.ResponseStatusException;
+import org.springframework.http.HttpStatus;
 
 import java.util.List;
 import java.util.NoSuchElementException;
@@ -31,9 +33,12 @@ public class TopicoService {
         this.cursoRepo = cursoRepo;
     }
 
+    public boolean existsByTituloAndMensagem(String titulo, String mensagem) {
+        return topicoRepo.existsByTituloAndMensagem(titulo, mensagem);
+    }
+
     @Transactional
     public TopicoResponse criar(TopicoRequest req) {
-        validarDados(req);
         Usuario autor = usuarioRepo.findById(req.getAutorId())
                 .orElseThrow(() -> new NoSuchElementException("Autor não encontrado"));
         Curso curso = cursoRepo.findById(req.getCursoId())
@@ -80,7 +85,6 @@ public class TopicoService {
     public TopicoResponse atualizar(Long id, TopicoRequest req) {
         Topico existente = topicoRepo.findById(id)
                 .orElseThrow(() -> new NoSuchElementException("Tópico não encontrado"));
-        validarDados(req);
         existente.setTitulo(req.getTitulo());
         existente.setMensagem(req.getMensagem());
         existente.setStatus(req.getStatus());
@@ -101,17 +105,6 @@ public class TopicoService {
             throw new NoSuchElementException("Tópico não encontrado");
         }
         topicoRepo.deleteById(id);
-    }
-
-    private void validarDados(TopicoRequest req) {
-        List<Topico> duplicados = topicoRepo
-                .findByTituloContainingIgnoreCase(req.getTitulo(), Pageable.unpaged())
-                .stream()
-                .filter(t -> t.getMensagem().equals(req.getMensagem()))
-                .toList();
-        if (!duplicados.isEmpty()) {
-            throw new IllegalArgumentException("Já existe um tópico com mesmo título e mensagem");
-        }
     }
 
     private TopicoResponse mapToResponse(Topico t) {

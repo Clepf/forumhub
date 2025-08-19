@@ -1,0 +1,20 @@
+# Template para configuração de testes
+# Copie este arquivo para application-test.properties e configure as variáveis
+
+# Configuração H2 para testes
+spring.datasource.url=jdbc:h2:mem:testdb;DB_CLOSE_DELAY=-1;DB_CLOSE_ON_EXIT=FALSE
+spring.datasource.driverClassName=org.h2.Driver
+spring.datasource.username=sa
+spring.datasource.password=password
+spring.jpa.database-platform=org.hibernate.dialect.H2Dialect
+
+# JWT para testes - SUBSTITUA por uma chave segura para testes
+jwt.secret=SEU_JWT_SECRET_PARA_TESTES_AQUI
+jwt.expiration=3600000
+
+# Flyway
+spring.flyway.locations=classpath:db/migration
+
+# Logs
+logging.level.org.springframework.security=DEBUG
+logging.level.com.forumhub=DEBUG
